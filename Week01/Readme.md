@@ -77,23 +77,28 @@ security features and capabilities please refer to
 | `ls /` | `bin dev etc home lib media mnt opt proc root run sbin srv sys tmp usr var` |
 
 - [ ] 映像列表：`sudo docker images` 輸出
+| IMAGE               | ID            | DISK USAGE | CONTENT SIZE | EXTRA |
+|--------------------|---------------|------------|--------------|-------|
+| alpine:latest      | 25109184c71b  | 13.1MB     | 3.95MB       |       |
+| hello-world:latest | 85404b3c5395  | 25.9kB     | 9.52kB       | U     |
+| nginx:latest       | bc45d248c4e1  | 240MB      | 65.8MB       | U     |
 
 ## Snapshot 清單
 
 | 名稱 | 建立時機 | 用途說明 | 建立前驗證 |
 |---|---|---|---|
-| clean-baseline | （時間點） | （此節點代表的狀態） | （列出建點前做了哪些驗證） |
-| docker-ready | （時間點） | （此節點代表的狀態） | （列出建點前做了哪些驗證） |
+| clean-baseline | Ubuntu更新完，Docker還沒裝 | 建立乾淨的系統還原點 | 已驗證 `hostnamectl`、`ip route`、`sudo docker --version`、`docker compose version`、`sudo systemctl status docker --no-pager` 、 `sudo docker run --rm hello-world` |
+| docker-ready | Docker裝好並通過四層驗證後 | 確認Docker OK | 已驗證 `sudo systemctl status docker --no-pager`、`sudo docker run --rm hello-world` 、 `sudo docker images` |
 
 ## 故障演練三階段對照
 
 | 項目 | 故障前（基線） | 故障中（注入後） | 回復後 |
 |---|---|---|---|
-| docker.list 存在 | 是 | 否 | （填入） |
-| apt-cache policy 有候選版本 | 是 | 否 | （填入） |
-| docker 重裝可行 | 是 | 否 | （填入） |
-| hello-world 成功 | 是 | N/A | （填入） |
-| nginx curl 成功 | 是 | N/A | （填入） |
+| docker.list 存在 | 是 | 否 | 是 |
+| apt-cache policy 有候選版本 | 是 | 否 | 是 |
+| docker 重裝可行 | 是 | 否 | 是 |
+| hello-world 成功 | 是 | N/A | 是 |
+| nginx curl 成功 | 是 | N/A | 是 |
 
 ## 手動修復 vs Snapshot 回復
 
@@ -110,6 +115,14 @@ security features and capabilities please refer to
 
 ## 最小可重現命令鏈
 （列出讓他人能重現故障注入與回復驗證的命令序列）
+## 最小可重現命令鏈
+```bash
+ls /etc/apt/sources.list.d/
+apt-cache policy docker-ce | head -5
+sudo systemctl status docker --no-pager
+sudo docker run --rm hello-world
+sudo docker images
+```
 
 ## 排錯紀錄
 - 症狀：
