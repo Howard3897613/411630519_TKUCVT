@@ -77,6 +77,7 @@ security features and capabilities please refer to
 | `ls /` | `bin dev etc home lib media mnt opt proc root run sbin srv sys tmp usr var` |
 
 - [ ] 映像列表：`sudo docker images` 輸出
+
 | IMAGE               | ID            | DISK USAGE | CONTENT SIZE | EXTRA |
 |--------------------|---------------|------------|--------------|-------|
 | alpine:latest      | 25109184c71b  | 13.1MB     | 3.95MB       |       |
@@ -104,17 +105,15 @@ security features and capabilities please refer to
 
 | 面向 | 手動修復 | Snapshot 回復 |
 |---|---|---|
-| 所需時間 | （你的實測） | （你的實測） |
-| 適用情境 | （你的判斷） | （你的判斷） |
-| 風險 | （你的判斷） | （你的判斷） |
+| 所需時間 | 30多秒 | 2分鐘 |
+| 適用情境 | 故障原因單純 | 設定檔被改壞時 |
+| 風險 | 手動修復成本上升 | 太多Snapshot會拖慢VMware效能；且實體磁碟損壞Snapshot會遺失 |
 
 ## Snapshot 保留策略
-- 新增條件：
-- 保留上限：
-- 刪除條件：
+- **新增條件：** 每次安裝新工具或大改設定前，且當前狀態已驗證通過時。
+- **保留上限：** 最多 3 個活躍 snapshot。
+- **刪除條件：** 已有更新節點且舊節點確認不再需要時，刪除最舊的。
 
-## 最小可重現命令鏈
-（列出讓他人能重現故障注入與回復驗證的命令序列）
 ## 最小可重現命令鏈
 ```bash
 ls /etc/apt/sources.list.d/
@@ -125,10 +124,10 @@ sudo docker images
 ```
 
 ## 排錯紀錄
-- 症狀：
-- 診斷：（你首先查了什麼？）
-- 修正：（做了什麼改動？）
-- 驗證：（如何確認修正有效？）
+- 症狀：使用Bridge 無法成功連線網路
+- 診斷：改為使用NAT測試是否為網路異常，發現是學校網路驗證問題
+- 修正：使用學校單一登入
+- 驗證：先使用 `ping 8.8.8.8` 測試網路路由，並用 `ping google.com` 檢查DNS是否正常。
 
 ## 設計決策
-（說明本週至少 1 個技術選擇與取捨）
+利用VMware作為環境，統一底層作業系統為Ubuntu，消除不同 Host OS 之間的差異，而且出問題時修復容易。
