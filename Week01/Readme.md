@@ -13,8 +13,7 @@
 |---|---|---|---|
 | CPU | 2 vCPU | `lscpu \| grep "^CPU(s)"` | lscpu: bad usage |
 | 記憶體 | 4 GB | `free -h \| grep Mem` | free [options] (詳見圖)|
-| 磁碟 | 40 GB | `df -h /` | 檔案系統        容量  已用  可用 已用% 掛載點 <br>/dev/sda2        20G   11G  7.7G   59% /
- |
+| 磁碟 | 40 GB | `df -h /` | 檔案系統        容量  已用  可用 已用% 掛載點 <br>/dev/sda2        20G   11G  7.7G   59% / |
 | Hypervisor | VMware | `lscpu \| grep Hypervisor` | lscpu: bad usage |
 
 ![MEm](MEm.png)
