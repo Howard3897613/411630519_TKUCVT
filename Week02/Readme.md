@@ -32,13 +32,14 @@ PING google.com (142.250.66.78) 56(84) bytes of data.
 rtt min/avg/max/mdev = 6.500/20.347/40.002/10.950 ms 
 ```
 - [ ] 雙向互 ping 成功：貼上雙方 `ping` 輸出
+
 ![aPb](aPb.png)
 ![aPb](aPb.png)
 - [ ] SSH 連線成功：`ssh <user>@<ip> "hostname"` 輸出
     ```
     ## 因為這裡有先做了Week03，所以hostname是app
 
-    ssh howard@192.168.112.128 ""hostname
+    ssh howard@192.168.112.128 "hostname"
     howard@192.168.112.128's password: 
     app
 
