@@ -67,7 +67,18 @@ rtt min/avg/max/mdev = 6.500/20.347/40.002/10.950 ms
 | dev-a SSH server-b | 成功 | Connection refused | 成功(顯示app) |
 
 ## 排錯順序
-（寫出你的 L2 → L3 → L4 排錯步驟與每層使用的命令）
+1. **L2**
+   - **檢查內容**：有沒有拿到正確的 IP 位址？
+   - **使用命令**：`ip address show`
+
+2. **L3**
+   - **檢查內容**：在 L2 正常的前提下，確認路由是否正確，以及網路封包能否抵達對端。
+   - **使用命令**：先用 `ip route show` 檢查路由，再用 `ping -c 4 IP` 測試。
+
+3. **L4**
+   - **檢查內容**：確認SSH是否有啟動並在特定的Port上監聽，且連線未被防火牆阻擋。
+   - **使用命令**：目標端使用 `ss -tlnp | grep :22` 確認監聽狀態，來源端使用 `ssh howard@<ip> "hostname"` 實際測試連線。
+
 
 ## 網路拓樸圖
 （嵌入或連結 network-diagram.png）
