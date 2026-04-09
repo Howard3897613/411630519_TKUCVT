@@ -82,13 +82,13 @@ rtt min/avg/max/mdev = 6.500/20.347/40.002/10.950 ms
 
 
 ## 網路拓樸圖
-（嵌入或連結 network-diagram.png）
+![network-diagram](network-diagram.png)
 
 ## 排錯紀錄
-- 症狀：
-- 診斷：（你首先查了什麼？用了哪個命令？）
-- 修正：（做了什麼改動？）
-- 驗證：（如何確認修正有效？）
+- **症狀：** 從 dev-a 執行 `ping` 測試 server-b 成功，但嘗試 SSH 連線時卻顯示 `Connection refused`。
+- **診斷：** 因為 `ping` 成功，判斷 L3 網路層正常，問題應該出在 L4 服務層。進入 server-b 使用 `ss -tlnp | grep :22` 檢查，發現沒有任何關於 port 22 的監聽紀錄，確認是 SSH 服務未啟動。
+- **修正：** 在 server-b 上執行 `sudo systemctl start ssh` 來啟動服務。
+- **驗證：** 再次於 server-b 執行 `ss -tlnp | grep :22` 確認有監聽紀錄，接著從 dev-a 重新執行 `ssh howard@192.168.112.128 "hostname"`，成功回傳 `app`，確認修復有效。
 
 ## 設計決策
 dev-a 採用雙網卡（NAT + Host-only）：
