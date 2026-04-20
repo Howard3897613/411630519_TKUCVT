@@ -76,7 +76,7 @@ Docker CLI（`/usr/bin/docker`）只是使用者呼叫的命令列工具，而 D
 
 ## 環境變數
 
-- $PATH：`  /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin`
+- $PATH：`/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin`
 - which docker：`/usr/bin/docker`
 - 容器內外環境變數差異觀察：容器是一個隔離的執行環境，不會繼承 Host OS 的 shell 設定，因此容器內的 `$HOME` 與 `$PATH` 變數都與 Host 完全不同。
 
