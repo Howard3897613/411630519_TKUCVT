@@ -1,0 +1,17 @@
+=== 故障前 ===
+[四  5月 21 10:33:37 2026] veth2f7edda: entered allmulticast mode
+[四  5月 21 10:33:37 2026] veth2f7edda: entered promiscuous mode
+[四  5月 21 10:33:37 2026] eth0: renamed from veth62d6a6f
+[四  5月 21 10:33:37 2026] docker0: port 2(veth2f7edda) entered blocking state
+[四  5月 21 10:33:37 2026] docker0: port 2(veth2f7edda) entered forwarding state
+
+=== 故障中（memory=32m + dd 200m）===
+[四  5月 21 09:38:14 2026] systemd[1]: Listening on systemd-oomd.socket - Userspace Out-Of-Memory (OOM) Killer Socket.
+[四  5月 21 10:37:32 2026] dd invoked oom-killer: gfp_mask=0xcc0(GFP_KERNEL), order=0, oom_score_adj=0
+[四  5月 21 10:37:32 2026]  oom_kill_process+0x118/0x290
+[四  5月 21 10:37:32 2026] [  pid  ]   uid  tgid total_vm      rss rss_anon rss_file rss_shmem pgtables_bytes swapents oom_score_adj name
+[四  5月 21 10:37:32 2026] oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=docker-05d9d03c62b7ddfbc2aa6b64df6e049fc1934fb84e82438386535de06675b948.scope,mems_allowed=0,oom_memcg=/system.slice/docker-05d9d03c62b7ddfbc2aa6b64df6e049fc1934fb84e82438386535de06675b948.scope,task_memcg=/system.slice/docker-05d9d03c62b7ddfbc2aa6b64df6e049fc1934fb84e82438386535de06675b948.scope,task=dd,pid=7566,uid=0
+[四  5月 21 10:37:32 2026] Memory cgroup out of memory: Killed process 7566 (dd) total-vm:2656kB, anon-rss:1024kB, file-rss:812kB, shmem-rss:0kB, UID:0 pgtables:52kB oom_score_adj:0
+
+=== 容器狀態 ===
+OOMKilled=true ExitCode=137

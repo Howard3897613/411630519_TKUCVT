@@ -1,0 +1,5 @@
+[四  5月 21 10:33:37 2026] veth2f7edda: entered allmulticast mode
+[四  5月 21 10:33:37 2026] veth2f7edda: entered promiscuous mode
+[四  5月 21 10:33:37 2026] eth0: renamed from veth62d6a6f
+[四  5月 21 10:33:37 2026] docker0: port 2(veth2f7edda) entered blocking state
+[四  5月 21 10:33:37 2026] docker0: port 2(veth2f7edda) entered forwarding state

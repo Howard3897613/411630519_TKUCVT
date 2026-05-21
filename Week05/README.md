@@ -2,11 +2,12 @@
 
 ## Docker 環境
 
-*(請在 app VM 執行 `docker info 2>/dev/null | grep -E "Storage Driver|Cgroup Driver|Cgroup Version|Runtime"` 並確認填入)*
-- Storage Driver：overlay2
-- Cgroup Version：2
-- Cgroup Driver：systemd
-- Default Runtime：runc
+Storage Driver: overlayfs
+Cgroup Driver: systemd
+Cgroup Version: 2
+Runtimes: io.containerd.runc.v2 runc
+Default Runtime: runc
+
 
 ## Namespace 觀察
 
@@ -19,26 +20,30 @@
 - **USER**：隔離使用者與群組 ID 映射。允許容器內的 root 使用者在 host 實際上對應為一個無特權的普通使用者，提升安全性。
 
 ### Host vs 容器 inode 對照
-*(請完成步驟 5-8，並在此貼上你的 `namespace-table.md` 內容)*
-`<請在此填入表格>`
+![fail](screenshots/image.png)
+[namespace-table.md](namespace-table.md)
 
 ### 容器內 `ps aux` 輸出
-*(請執行步驟 10 並貼上輸出)*
-`<請在此貼上輸出>`
+```
+ # ps aux
+PID   USER     TIME  COMMAND
+    1 root      0:00 sleep 3600
+    7 root      0:00 sh
+   13 root      0:00 ps aux
+```
 **為什麼只看到幾支 process？**
 因為 Linux kernel 透過 PID Namespace 將容器的視角隔離了。容器只能看到與自己同屬一個 Namespace 的 process，無法看到 host 上的其他上千個 process。
 
 ## Cgroups 實驗
 
 ### 容器內讀到的限制
-- memory.max：268435456 
+- memory.max：268435456
 - cpu.max：50000 100000
 
 ### Host 端對照（用 `docker inspect -f '{{.HostConfig.CgroupParent}}'` 動態取得路徑）
-*(請執行步驟 16-17，取得目錄路徑後讀取數值填入)*
-- memory.max：`<請填寫從 host 讀取的值>`
-- cpu.max：`<請填寫從 host 讀取的值>`
-- memory.current：`<請填寫從 host 讀取的值>`
+- memory.max：268435456
+- cpu.max：50000 100000
+- memory.current：405504
 
 ### OOM 故障三階段
 | 項目 | 故障前 | 故障中（memory=32m + dd 200m）| 回復後（memory=256m）|
@@ -47,21 +52,46 @@
 | OOMKilled | false | true | false |
 | dmesg 關鍵字 | 無 OOM | Memory cgroup out of memory | 無 OOM |
 
-*(請將步驟 20 產生的 `oom-evidence.txt` 內容貼在此處)*
-`<請在此貼上 oom-evidence.txt 內容>`
+[before](oom-before.txt)
+[evidence](oom-evidence.txt)
 
 ## Image 分層
 
 ### `docker image inspect nginx:1.27-alpine` layer 數量
-*(請執行步驟 23 並填入計算出的層數)*
-`<請填入層數>`
+8層
+```
+["sha256:08000c18d16dadf9553d747a58cf44023423a9ab010aab96cf263d2216b8b350"
+"sha256:d71eae0084c1aa823dd8fb2ecf8604d5c0f4911226c042bb1f8297e819f4b192"
+"sha256:c56f134d380585340a68d0db2f2c170641a1c0ff72ccf2438cf2f693df756a85"
+"sha256:e244aa659f612a80c40dd8645812301e3def6b15ec67b9e486ed2201172b51d1"
+"sha256:b8d7d1d2263425d6044e059b2810017d062d659b9b755241f3747eda77726250"
+"sha256:811a4dbbf4a5309e4390cf655c12db92e1a4304fb9d9731f83e7b02e95a617c6"
+"sha256:947e805a4ac71f68e6703550c0b36c2aa2e554c4fa670ca2da6a25c6d7dccb66"
+"sha256:0d853d50b128aa460b47e7121849463a14b18d4fd976caf5014744aae24d28aa"]
+["sha256:994456c4fd7b2b87346a81961efb4ce945a39592d32e0762b38768bca7c7d085"
+"sha256:aad7be8b43d91f43cdc23af3440b13eea7c2957feec9c46c977cb256e92481f6"
+"sha256:49c50d3fe9320c2fc37d1aee38488bad246a680333a20746a5ef63f21d074c67"
+"sha256:ed2f467e1cfcfea2cff2f48b21b86e763979ee599591f3632b44899f26ce583b"
+"sha256:6f197061abd698a3eaf862a101d043b50b9162024cdf830e7cfb75131a9f3725"
+"sha256:51b6aefac2f5df9fa2c24d782ef818b0b96238af2511eb60f79a58d1c839513a"
+"sha256:6dba76576010ad0450285be4d174f5084b0bf597a68f31f8ad597fab0f032f3d"
+"sha256:a0636672c7fc32af4d1022152a8e32256abd648fb01f48f33023839e65c6d1cb"]
+```
+
 
 ### 兩個同源 image 共享 layer 的證據
 根據 `docker image inspect` 的輸出，`nginx:1.27-alpine` 與 `nginx:1.26-alpine` 兩者的 `RootFS.Layers` 陣列中，**最底層的前幾個 sha256 雜湊值是完全相同的**。這證明了 Union FS (overlay2) 透過內容雜湊比對，讓同源映像檔共用了相同的底層檔案，有效節省了磁碟空間。
 
 ### `docker diff` 輸出範例與解讀
-*(請執行步驟 25 並貼上輸出)*
-`<請在此貼上 docker diff 輸出>`
+- **輸出：**
+  ```text
+  C /etc
+  C /etc/nginx
+  C /etc/nginx/conf.d
+  A /etc/nginx/conf.d/custom.conf
+  D /etc/nginx/conf.d/default.conf
+  C /tmp
+  A /tmp/hello.txt
 **解讀：**
 - `A` (Added)：代表在容器的可寫層 (upperdir) 中新增了檔案，例如 `/tmp/hello.txt`。
 - `C` (Changed)：代表唯讀層 (lowerdir) 中的目錄內容發生了變動，被複製到可寫層進行了修改。
