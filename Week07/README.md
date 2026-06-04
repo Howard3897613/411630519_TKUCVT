@@ -43,6 +43,16 @@ flowchart TD
 當只有使用 `depends_on` 時，Compose 只要看到 db「啟動了」就會立刻啟動 app。但此時 Postgres 還在初始化，導致 app 連線失敗並回傳 `503`。
 加入 `healthcheck` 搭配 `condition: service_healthy` 後，Compose 會耐心等待 db 的 healthcheck 回報成功（真正能接受連線）後才啟動 app。這時候 app 一旦啟動，就能立刻成功連線到資料庫，回傳 `200`，解決了時序上的競態條件 (Race condition)。
 
+## healthcheck 前後對照
+| 寫法 | curl /healthz t=1s | t=3s | t=5s | t=10s |
+|---|---|---|---|---|
+| 只 depends_on | 503 | 503 | 503 | 200 |
+| service_healthy | refused | refused | 200 | 200 |
+
+**觀察：**
+當只有使用 `depends_on` 時，Compose 只要看到 db「啟動了」就會立刻啟動 app。但此時 Postgres 還在初始化，導致 app 連線失敗並回傳 `503`。
+加入 `healthcheck` 搭配 `condition: service_healthy` 後，Compose 會耐心等待 db 的 healthcheck 回報成功（真正能接受連線）後才啟動 app。這時候 app 一旦啟動，就能立刻成功連線到資料庫，回傳 `200`，解決了時序上的競態條件 (Race condition)。
+
 ## 設計決策
 **為什麼 db 用 named volume 而不是 bind mount？**
 因為資料庫的檔案結構是由資料庫引擎（如 Postgres）自行管理的，我們不需要也不應該直接在 Host 端用編輯器去干涉這些二進位檔案。使用 named volume 可以將這些細節完全交給 Docker 管理，避免了 Bind Mount 常見的權限衝突（UID/GID 不對齊）與跨平台（Windows/Mac/Linux）效能問題。
