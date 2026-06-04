@@ -1,0 +1,33 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    command: >
+      sh -c "sleep 8 && exec docker-entrypoint.sh postgres"
+    restart: unless-stopped
+
+  app:
+    build: ./app
+    ports:
+      - "8080:80"
+    environment:
+      DB_HOST: db
+      DB_USER: postgres
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+    depends_on:
+      - db
+    restart: unless-stopped
+    volumes:
+      - ./app:/app
+      - type: tmpfs
+        target: /tmp/cache
+        tmpfs:
+          size: 67108864   # 64 MiB
+
+volumes:
+  db-data:
