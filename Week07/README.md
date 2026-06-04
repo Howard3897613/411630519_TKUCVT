@@ -43,15 +43,16 @@ flowchart TD
 當只有使用 `depends_on` 時，Compose 只要看到 db「啟動了」就會立刻啟動 app。但此時 Postgres 還在初始化，導致 app 連線失敗並回傳 `503`。
 加入 `healthcheck` 搭配 `condition: service_healthy` 後，Compose 會耐心等待 db 的 healthcheck 回報成功（真正能接受連線）後才啟動 app。這時候 app 一旦啟動，就能立刻成功連線到資料庫，回傳 `200`，解決了時序上的競態條件 (Race condition)。
 
-## healthcheck 前後對照
-| 寫法 | curl /healthz t=1s | t=3s | t=5s | t=10s |
-|---|---|---|---|---|
-| 只 depends_on | 503 | 503 | 503 | 200 |
-| service_healthy | refused | refused | 200 | 200 |
-
-**觀察：**
-當只有使用 `depends_on` 時，Compose 只要看到 db「啟動了」就會立刻啟動 app。但此時 Postgres 還在初始化，導致 app 連線失敗並回傳 `503`。
-加入 `healthcheck` 搭配 `condition: service_healthy` 後，Compose 會耐心等待 db 的 healthcheck 回報成功（真正能接受連線）後才啟動 app。這時候 app 一旦啟動，就能立刻成功連線到資料庫，回傳 `200`，解決了時序上的競態條件 (Race condition)。
+## 排錯紀錄
+- 症狀：執行 `docker compose up -d` 時，出現錯誤訊息 `yaml: while parsing a block mapping at <unknown position>: line 31, column 3: did not find expected key`，導致新的設定無法生效。
+- 診斷：經過檢查 `compose.yaml`，發現有兩個致命錯誤：
+  1. Service 名稱未對齊：資料庫服務被命名為 `database`，但 `app` 區塊的 `depends_on` 卻寫著 `- db`。
+  2. 掛載層級錯誤（主因）：不小心將 `app` 專用的 `bind mount` (`./app:/app`) 與 `tmpfs` 設定，貼到了整份檔案最底部的全域 `volumes:` 區塊。全域區塊只能用來宣告 named volume 的名稱，不能寫具體的掛載動作。
+- 修正：
+  1. 將資料庫服務名稱改回 `db:`。
+  2. 將 `bind mount` 與 `tmpfs` 的設定搬移至 `app:` 服務區塊底下的 `volumes:` 內，並確保 YAML 縮排正確。
+  3. 使用 `> compose.yaml` 快速清空壞掉的檔案，重新貼上正確排版的內容。
+- 驗證：執行 `docker compose config` 順利印出正確解析的設定檔而無報錯。接著執行 `docker compose up -d` 成功啟動所有容器，且後續的 tmpfs 與 healthcheck 測試皆正常運作。
 
 ## 設計決策
 **為什麼 db 用 named volume 而不是 bind mount？**
